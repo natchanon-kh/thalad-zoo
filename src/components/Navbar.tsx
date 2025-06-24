@@ -1,20 +1,5 @@
 import React, { useState } from "react";
-
-// Mock router functions for demo
-const Link = ({ to, children, className, onClick }: any) => (
-  <a
-    href="#"
-    className={className}
-    onClick={(e) => {
-      e.preventDefault();
-      onClick?.();
-    }}
-  >
-    {children}
-  </a>
-);
-
-const useLocation = () => ({ pathname: "/" }); // Mock current path
+import { Link, useLocation } from "react-router-dom";
 
 const NavbarDemo: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
