@@ -104,11 +104,20 @@ const AnimalGamePage = () => {
   };
 
   const handleAnimalClick = (name) => {
+    // ป้องกันการคลิกถ้ายังไม่เริ่มเกม
+    if (!gameStarted) return;
+
     setSelectedAnimal(name);
     if (!viewedAnimals.includes(name)) {
       setViewedAnimals([...viewedAnimals, name]);
     }
     fetchAnimalData(name);
+  };
+
+  const handleFinishClick = () => {
+    // Reset การ์ดทั้งหมดกลับเป็นชื่อสัตว์
+    setViewedAnimals([]);
+    setGameStarted(false);
   };
 
   const getImageSrc = (name) => {
@@ -159,14 +168,21 @@ const AnimalGamePage = () => {
             key={index}
             onClick={() => {
               if (item === "Start") setGameStarted(true);
+              else if (item === "Finish") handleFinishClick();
               else if (animalNames.includes(item)) handleAnimalClick(item);
             }}
             className={`
-              aspect-square rounded-lg border-2 shadow-md overflow-hidden relative cursor-pointer
+              aspect-square rounded-lg border-2 shadow-md overflow-hidden relative
               flex items-center justify-center text-center
               transform transition-all duration-300
               ${getBlockStyle(item)}
-              ${item ? "hover:scale-105 hover:z-20 active:scale-95" : ""}
+              ${
+                item && (item === "Start" || item === "Finish" || gameStarted)
+                  ? "cursor-pointer hover:scale-105 hover:z-20 active:scale-95"
+                  : item && !gameStarted
+                  ? "cursor-not-allowed opacity-60"
+                  : ""
+              }
               ${item === "Start" || item === "Finish" ? "hover:shadow-xl" : ""}
               group
             `}
