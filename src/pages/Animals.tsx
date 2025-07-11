@@ -58,6 +58,58 @@ const AnimalGamePage = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // โหลดข้อมูลจาก localStorage เมื่อ component mount
+  useEffect(() => {
+    // โหลด viewedAnimals
+    const storedViewedAnimals = localStorage.getItem("viewedAnimals");
+    if (storedViewedAnimals) {
+      try {
+        const parsed = JSON.parse(storedViewedAnimals);
+        if (Array.isArray(parsed)) {
+          setViewedAnimals(parsed);
+        }
+      } catch (error) {
+        console.error("❌ Error parsing viewedAnimals:", error);
+      }
+    }
+
+    // โหลด animalData
+    const storedAnimalData = localStorage.getItem("animalData");
+    if (storedAnimalData) {
+      try {
+        const parsed = JSON.parse(storedAnimalData);
+        if (parsed && typeof parsed === "object") {
+          setAnimalData(parsed);
+        }
+      } catch (error) {
+        console.error("❌ Error parsing animalData:", error);
+      }
+    }
+
+    // โหลด gameStarted
+    const storedGameStarted = localStorage.getItem("gameStarted");
+    if (storedGameStarted === "true") {
+      setGameStarted(true);
+    }
+  }, []); // เรียกครั้งเดียวตอน mount
+
+  //บันทึกข้อมูลไป localStorage เมื่อมีการเปลี่ยนแปลง
+  useEffect(() => {
+    if (viewedAnimals.length > 0) {
+      localStorage.setItem("viewedAnimals", JSON.stringify(viewedAnimals));
+    }
+  }, [viewedAnimals]);
+
+  useEffect(() => {
+    if (Object.keys(animalData).length > 0) {
+      localStorage.setItem("animalData", JSON.stringify(animalData));
+    }
+  }, [animalData]);
+
+  useEffect(() => {
+    localStorage.setItem("gameStarted", gameStarted.toString());
+  }, [gameStarted]);
+
   const generateBoardGrid = () => {
     const items = ["Start", ...animalNames, "Finish"];
     const rows = isMobile ? 13 : 5;
@@ -82,6 +134,7 @@ const AnimalGamePage = () => {
   const fetchAnimalData = async (name) => {
     if (animalData[name]) return;
     setLoading(true);
+
     try {
       const encoded = encodeURIComponent(name);
       const res = await fetch(
@@ -94,7 +147,8 @@ const AnimalGamePage = () => {
           ? data
           : { title: name, extract: "ไม่พบข้อมูล", thumbnail: null },
       }));
-    } catch {
+    } catch (error) {
+      console.error("❌ Error fetching data for:", name, error);
       setAnimalData((prev) => ({
         ...prev,
         [name]: { title: name, extract: "เกิดข้อผิดพลาด", thumbnail: null },
@@ -108,9 +162,11 @@ const AnimalGamePage = () => {
     if (!gameStarted) return;
 
     setSelectedAnimal(name);
+
     if (!viewedAnimals.includes(name)) {
-      setViewedAnimals([...viewedAnimals, name]);
+      setViewedAnimals((prev) => [...prev, name]);
     }
+
     fetchAnimalData(name);
   };
 
@@ -118,11 +174,18 @@ const AnimalGamePage = () => {
     // Reset การ์ดทั้งหมดกลับเป็นชื่อสัตว์
     setViewedAnimals([]);
     setGameStarted(false);
+    // เคลียร์ localStorage
+    localStorage.removeItem("viewedAnimals");
+    localStorage.removeItem("gameStarted");
+    localStorage.removeItem("animalData");
+    setAnimalData({});
   };
 
   const getImageSrc = (name) => {
     if (name === "ค่างแว่นถิ่นใต้") return DuskyLeafMonkeyImage;
-    return animalData[name]?.thumbnail?.source;
+    const animal = animalData[name];
+    const imageSrc = animal?.thumbnail?.source;
+    return imageSrc;
   };
 
   const closeModal = () => {
@@ -141,14 +204,33 @@ const AnimalGamePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-2 sm:p-4">
+      {/* Debug Info
+      <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-4 text-sm">
+        <h3 className="font-bold text-yellow-800 mb-2">🐛 Debug Info:</h3>
+        <p>
+          <strong>Game Started:</strong> {gameStarted ? "Yes" : "No"}
+        </p>
+        <p>
+          <strong>Viewed Animals:</strong> {viewedAnimals.length} /{" "}
+          {animalNames.length}
+        </p>
+        <p>
+          <strong>Animal Data Loaded:</strong> {Object.keys(animalData).length}
+        </p>
+        <p>
+          <strong>Viewed List:</strong> {viewedAnimals.join(", ") || "None"}
+        </p>
+      </div> */}
+
       {/* Header */}
       <div className="text-center mb-4 sm:mb-6">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-800 mb-2">
           🌿 สารานุกรมสัตว์ 🌿
         </h1>
-        <p className="text-emerald-700 text-base sm:text-lg md:text-xl font-medium px-4">
+        <p className="text-emerald-700 text-sm sm:text-lg md:text-xl font-medium px-4 text-center leading-snug">
           ผจญภัยไปกับเส้นทางบันไดงูแห่งการเรียนรู้ข้อมูลสัตว์นานาชนิด!
         </p>
+
         {!gameStarted && (
           <div className="mt-3 sm:mt-4 p-3 md:p-4 bg-emerald-100 rounded-lg border-2 border-emerald-300 max-w-sm sm:max-w-md mx-auto">
             <p className="text-emerald-800 font-semibold text-sm sm:text-base md:text-lg">
@@ -158,7 +240,7 @@ const AnimalGamePage = () => {
         )}
       </div>
 
-      {/* Game Board - แบบเต็มหน้า */}
+      {/* Game Board */}
       <div
         className="grid mx-auto gap-2 max-w-[90vw] mb-4 sm:mb-6"
         style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
@@ -242,17 +324,26 @@ const AnimalGamePage = () => {
                     </div>
                   </>
                 ) : (
-                  <span
-                    className={`${
-                      isMobile ? "text-xs" : "text-xs md:text-sm"
-                    } font-semibold text-slate-800 leading-tight px-1 ${
-                      isMobile
-                        ? "whitespace-normal"
-                        : "whitespace-nowrap overflow-hidden text-ellipsis"
-                    }`}
-                  >
-                    {item}
-                  </span>
+                  <div className="text-center p-1 w-full">
+                    <div
+                      className={`${
+                        isMobile ? "w-10 h-10" : "w-8 h-8 md:w-12 md:h-12"
+                      } bg-emerald-100 rounded-full flex items-center justify-center mb-1 mx-auto`}
+                    >
+                      <span className={"text-base md:text-lg"}>🐾</span>
+                    </div>
+                    <span
+                      className={`${
+                        isMobile ? "text-xs" : "text-xs md:text-sm"
+                      } font-semibold text-slate-800 leading-tight${
+                        isMobile
+                          ? "whitespace-normal"
+                          : "whitespace-nowrap overflow-hidden text-ellipsis"
+                      }`}
+                    >
+                      {item}
+                    </span>
+                  </div>
                 )}
               </>
             )}
