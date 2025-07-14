@@ -42,10 +42,22 @@ export default function ContactPage() {
       return;
     }
 
-    // Handle form submission here
-    console.log("Form submitted:", formData);
-    alert("ข้อความของคุณถูกส่งแล้ว เราจะติดต่อกลับไปในเร็วๆ นี้");
-    // Reset form
+    const recipientEmail = "saraban_03800102@dla.go.th";
+
+    const subject = encodeURIComponent(formData.subject);
+    const body = encodeURIComponent(
+      `ชื่อ: ${formData.name}\n` +
+        `อีเมล: ${formData.email}\n` +
+        `เบอร์โทร: ${formData.phone || "-"}\n\n` +
+        `ข้อความ:\n${formData.message}`
+    );
+
+    const mailtoLink = `mailto:${recipientEmail}?subject=${subject}&body=${body}`;
+
+    // เปิด mail client
+    window.location.href = mailtoLink;
+
+    // ล้างฟอร์มหลังจากเปิดลิงก์
     setFormData({
       name: "",
       email: "",
