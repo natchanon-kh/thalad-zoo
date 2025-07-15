@@ -1,13 +1,24 @@
-import React, { useState, useEffect } from "react";
-import { X, Volume2, Star, Trophy, MapPin } from "lucide-react";
+import { useState, useEffect } from "react";
+import AnimalCard from "../components/AnimalCard";
+import { X, Volume2, Trophy, MapPin } from "lucide-react";
 import DuskyLeafMonkeyImage from "../assets/DuskyLeafMonkey.jpg";
 
+type WikiAnimalData = {
+  title: string;
+  extract: string;
+  thumbnail?: {
+    source: string;
+  } | null;
+};
+
 const AnimalGamePage = () => {
-  const [selectedAnimal, setSelectedAnimal] = useState(null);
-  const [animalData, setAnimalData] = useState({});
+  const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
+  const [animalData, setAnimalData] = useState<Record<string, WikiAnimalData>>(
+    {}
+  );
   const [loading, setLoading] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
-  const [viewedAnimals, setViewedAnimals] = useState([]);
+  const [viewedAnimals, setViewedAnimals] = useState<string[]>([]);
 
   const animalNames = [
     "กวางม้า",
@@ -112,26 +123,20 @@ const AnimalGamePage = () => {
 
   const generateBoardGrid = () => {
     const items = ["Start", ...animalNames, "Finish"];
-    const rows = isMobile ? 13 : 5;
     const cols = isMobile ? 3 : 8;
+    const rows = Math.ceil(items.length / cols);
     const grid = Array(rows * cols).fill(null);
-    let i = 0;
 
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (i < items.length) {
-          const index = r * cols + (r % 2 === 0 ? c : cols - 1 - c);
-          grid[index] = items[i];
-          i++;
-        }
-      }
+    for (let i = 0; i < items.length; i++) {
+      grid[i] = items[i];
     }
+
     return { grid, rows, cols };
   };
 
   const { grid: boardGrid, rows, cols } = generateBoardGrid();
 
-  const fetchAnimalData = async (name) => {
+  const fetchAnimalData = async (name: string) => {
     if (animalData[name]) return;
     setLoading(true);
 
@@ -157,7 +162,7 @@ const AnimalGamePage = () => {
     setLoading(false);
   };
 
-  const handleAnimalClick = (name) => {
+  const handleAnimalClick = (name: string) => {
     // ป้องกันการคลิกถ้ายังไม่เริ่มเกม
     if (!gameStarted) return;
 
@@ -181,7 +186,7 @@ const AnimalGamePage = () => {
     setAnimalData({});
   };
 
-  const getImageSrc = (name) => {
+  const getImageSrc = (name: string): string | undefined => {
     if (name === "ค่างแว่นถิ่นใต้") return DuskyLeafMonkeyImage;
     const animal = animalData[name];
     const imageSrc = animal?.thumbnail?.source;
@@ -192,7 +197,7 @@ const AnimalGamePage = () => {
     setSelectedAnimal(null);
   };
 
-  const getBlockStyle = (item) => {
+  const getBlockStyle = (item: string) => {
     if (item === "Start")
       return "bg-gradient-to-br from-green-400 to-green-600 text-white border-green-500";
     if (item === "Finish")
@@ -228,7 +233,7 @@ const AnimalGamePage = () => {
           🌿 สารานุกรมสัตว์ 🌿
         </h1>
         <p className="text-emerald-700 text-sm sm:text-lg md:text-xl font-medium px-4 text-center leading-snug">
-          ผจญภัยไปกับเส้นทางบันไดงูแห่งการเรียนรู้ข้อมูลสัตว์นานาชนิด!
+          ผจญภัยไปกับเส้นทางแห่งการเรียนรู้ข้อมูลสัตว์นานาชนิด!
         </p>
 
         {!gameStarted && (
@@ -246,107 +251,78 @@ const AnimalGamePage = () => {
         style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
       >
         {boardGrid.map((item, index) => (
-          <div
-            key={index}
-            onClick={() => {
-              if (item === "Start") setGameStarted(true);
-              else if (item === "Finish") handleFinishClick();
-              else if (animalNames.includes(item)) handleAnimalClick(item);
-            }}
-            className={`
-              aspect-square rounded-lg border-2 shadow-md overflow-hidden relative
-              flex items-center justify-center text-center
-              transform transition-all duration-300
-              ${getBlockStyle(item)}
-              ${
-                item && (item === "Start" || item === "Finish" || gameStarted)
-                  ? "cursor-pointer hover:scale-105 hover:z-20 active:scale-95"
-                  : item && !gameStarted
-                  ? "cursor-not-allowed opacity-60"
-                  : ""
-              }
-              ${item === "Start" || item === "Finish" ? "hover:shadow-xl" : ""}
-              group
-            `}
-          >
+          <div key={index}>
             {item === "Start" && (
-              <div className="text-center p-1">
-                <MapPin
-                  className={`${
-                    isMobile ? "w-4 h-4" : "w-6 h-6 md:w-8 md:h-8"
-                  } text-white mx-auto mb-0.5`}
-                />
-                <span
-                  className={`${
-                    isMobile ? "text-xs" : "text-sm md:text-base"
-                  } font-bold text-white`}
-                >
-                  START
-                </span>
+              <div
+                onClick={() => setGameStarted(true)}
+                className={`
+            aspect-square rounded-lg border-2 shadow-md overflow-hidden relative
+            flex items-center justify-center text-center
+            transform transition-all duration-300
+            ${getBlockStyle(item)}
+            cursor-pointer hover:scale-105 hover:z-20 active:scale-95
+            group
+          `}
+              >
+                <div className="text-center p-1">
+                  <MapPin
+                    className={`${
+                      isMobile ? "w-4 h-4" : "w-6 h-6 md:w-8 md:h-8"
+                    } text-white mx-auto mb-0.5`}
+                  />
+                  <span
+                    className={`${
+                      isMobile ? "text-xs" : "text-sm md:text-base"
+                    } font-bold text-white`}
+                  >
+                    START
+                  </span>
+                </div>
               </div>
             )}
 
             {item === "Finish" && (
-              <div className="text-center p-1">
-                <Trophy
-                  className={`${
-                    isMobile ? "w-4 h-4" : "w-6 h-6 md:w-8 md:h-8"
-                  } text-white mx-auto mb-0.5`}
-                />
-                <span
-                  className={`${
-                    isMobile ? "text-xs" : "text-sm md:text-base"
-                  } font-bold text-white`}
-                >
-                  FINISH
-                </span>
+              <div
+                onClick={handleFinishClick}
+                className={`
+            aspect-square rounded-lg border-2 shadow-md overflow-hidden relative
+            flex items-center justify-center text-center
+            transform transition-all duration-300
+            ${getBlockStyle(item)}
+            cursor-pointer hover:scale-105 hover:z-20 active:scale-95
+            group
+          `}
+              >
+                <div className="text-center p-1">
+                  <Trophy
+                    className={`${
+                      isMobile ? "w-4 h-4" : "w-6 h-6 md:w-8 md:h-8"
+                    } text-white mx-auto mb-0.5`}
+                  />
+                  <span
+                    className={`${
+                      isMobile ? "text-xs" : "text-sm md:text-base"
+                    } font-bold text-white`}
+                  >
+                    FINISH
+                  </span>
+                </div>
               </div>
             )}
 
             {animalNames.includes(item) && (
-              <>
-                {viewedAnimals.includes(item) && getImageSrc(item) ? (
-                  <>
-                    <img
-                      src={getImageSrc(item)}
-                      alt={item}
-                      className="w-full h-full object-cover"
-                    />
-                    {/* แสดงชื่อสัตว์เมื่อ hover เฉพาะตอนที่เป็นรูปภาพแล้ว */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-1 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span
-                        className={`text-white ${
-                          isMobile ? "text-xs" : "text-sm"
-                        } font-bold leading-tight`}
-                      >
-                        {item}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center p-1 w-full">
-                    <div
-                      className={`${
-                        isMobile ? "w-10 h-10" : "w-8 h-8 md:w-12 md:h-12"
-                      } bg-emerald-100 rounded-full flex items-center justify-center mb-1 mx-auto`}
-                    >
-                      <span className={"text-base md:text-lg"}>🐾</span>
-                    </div>
-                    <span
-                      className={`${
-                        isMobile ? "text-xs" : "text-xs md:text-sm"
-                      } font-semibold text-slate-800 leading-tight${
-                        isMobile
-                          ? "whitespace-normal"
-                          : "whitespace-nowrap overflow-hidden text-ellipsis"
-                      }`}
-                    >
-                      {item}
-                    </span>
-                  </div>
-                )}
-              </>
+              <AnimalCard
+                name={item}
+                isViewed={viewedAnimals.includes(item)}
+                imageSrc={getImageSrc(item)}
+                isMobile={isMobile}
+                onClick={() => handleAnimalClick(item)}
+                gameStarted={gameStarted}
+                getBlockStyle={getBlockStyle}
+              />
             )}
+
+            {!item && <div></div>}
           </div>
         ))}
       </div>
