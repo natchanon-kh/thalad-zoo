@@ -67,7 +67,7 @@ export default function Home() {
 
               {/* Right side - Elephant illustration */}
               <div className="flex justify-center">
-                <img src="src\assets\elephant_home.png" alt="" />
+                <img src="/assets/elephant_home.png" alt="" />
               </div>
             </div>
           </div>
