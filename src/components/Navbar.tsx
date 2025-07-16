@@ -18,18 +18,6 @@ const Navbar: React.FC = () => {
       {/* Header with curved green background */}
       <div className="relative">
         <div className="bg-green-700 h-20 w-full"></div>
-        {/* <div className="absolute inset-0 bg-green-700">
-          <svg
-            className="absolute bottom-0 w-full h-8"
-            viewBox="0 0 1200 120"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0,0 C300,100 900,100 1200,0 L1200,120 L0,120 Z"
-              fill="rgb(245 245 244)"
-            />
-          </svg>
-        </div> */}
       </div>
 
       {/* Navigation */}
