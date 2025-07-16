@@ -137,7 +137,7 @@ const AnimalGamePage = () => {
     return { grid, rows, cols };
   };
 
-  const { grid: boardGrid, rows, cols } = generateBoardGrid();
+  const { grid: boardGrid, cols } = generateBoardGrid();
 
   const fetchAnimalData = async (name: string) => {
     // ตรวจว่ามีข้อมูล extract และ thumbnail แล้วจริงหรือยัง
