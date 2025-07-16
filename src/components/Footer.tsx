@@ -104,22 +104,8 @@ const Footer: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-4">
           <div className="flex flex-col md:flex-row justify-center items-center">
             <p className="text-green-100 text-sm">
-              © 2024 THALAD ZOO. สงวนลิขสิทธิ์
+              © 2025 THALAD ZOO. สงวนลิขสิทธิ์
             </p>
-            {/* <div className="flex space-x-4 mt-2 md:mt-0">
-              <a
-                href="#"
-                className="text-green-100 hover:text-white transition-colors text-sm"
-              >
-                นโยบายความเป็นส่วนตัว
-              </a>
-              <a
-                href="#"
-                className="text-green-100 hover:text-white transition-colors text-sm"
-              >
-                เงื่อนไขการใช้งาน
-              </a>
-            </div> */}
           </div>
         </div>
       </div>

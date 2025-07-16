@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-const NavbarDemo: React.FC = () => {
+const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -60,7 +60,7 @@ const NavbarDemo: React.FC = () => {
             ))}
           </div>
 
-          {/* Mobile menu button (เฉพาะ mobile จริงๆ) */}
+          {/* Mobile menu button*/}
           <button
             className="md:hidden text-gray-700 hover:text-green-700 transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -115,4 +115,4 @@ const NavbarDemo: React.FC = () => {
   );
 };
 
-export default NavbarDemo;
+export default Navbar;
