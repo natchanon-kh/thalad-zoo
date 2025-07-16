@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import AnimalCard from "../components/AnimalCard";
 import AnimalModal from "../components/AnimalModal";
-import { X, Volume2, Trophy, MapPin } from "lucide-react";
-import DuskyLeafMonkeyImage from "../assets/DuskyLeafMonkey.jpg";
+import { Trophy, MapPin } from "lucide-react";
 
 type WikiAnimalData = {
   title: string;
@@ -21,45 +20,48 @@ const AnimalGamePage = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [viewedAnimals, setViewedAnimals] = useState<string[]>([]);
 
-  const animalNames = [
-    "กวางม้า",
-    "กวางรูซ่า",
-    "กระจงหนู",
-    "กระรอก",
-    "ไก่ต๊อก",
-    "ไก่ฟ้าสีทอง",
-    "ค่างแว่นถิ่นใต้",
-    "จระเข้น้ำจืด",
-    "ชะนีมือขาว",
-    "ชะมดแผงหางปล้อง",
-    "ตะกวด",
-    "ตัวนิ่ม",
-    "เต่าบก",
-    "เต่านา",
-    "นกกก",
-    "นกคาสโซวารี่",
-    "นกเงือก",
-    "นกเงือกดำ",
-    "นกปรอดหัวโขน",
-    "นกเป็ดน้ำ",
-    "นกยูงอินเดีย",
-    "นกเลิฟเบิร์ด",
-    "นกหงส์หยก",
-    "นากเล็กเล็บสั้น",
-    "งูเหลือม",
-    "แพะ",
-    "แมวดาว",
-    "แรคคูน",
-    "เม่นใหญ่",
-    "เหยี่ยวแดง",
-    "วัวแดง",
-    "ลิงกัง",
-    "ลิงแสม",
-    "ลิงเสน",
-    "ลิงลม",
-    "หมีขอ",
-    "หมีหมา",
-  ];
+  const [animalNames, setAnimalNames] = useState<string[]>([]);
+  const [overrideData, setOverrideData] = useState<
+    Record<string, { description?: string; image?: string }>
+  >({});
+
+  useEffect(() => {
+    const fetchAnimalListAndOverrides = async () => {
+      try {
+        const res = await fetch(
+          "https://api.sheetbest.com/sheets/22584b7d-26d9-4b0e-9660-b7aafc120428"
+        );
+        const data = await res.json();
+
+        const names: string[] = [];
+        const overrides: Record<
+          string,
+          { description?: string; image?: string }
+        > = {};
+
+        data.forEach(
+          (item: { name?: string; description?: string; image?: string }) => {
+            if (item.name) {
+              names.push(item.name);
+              if (item.description || item.image) {
+                overrides[item.name] = {
+                  description: item.description || undefined,
+                  image: item.image || undefined,
+                };
+              }
+            }
+          }
+        );
+
+        setAnimalNames(names);
+        setOverrideData(overrides);
+      } catch (error) {
+        console.error("❌ Error fetching animal list and overrides:", error);
+      }
+    };
+
+    fetchAnimalListAndOverrides();
+  }, []);
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -138,20 +140,46 @@ const AnimalGamePage = () => {
   const { grid: boardGrid, rows, cols } = generateBoardGrid();
 
   const fetchAnimalData = async (name: string) => {
-    if (animalData[name]) return;
+    // ตรวจว่ามีข้อมูล extract และ thumbnail แล้วจริงหรือยัง
+    if (
+      animalData[name] &&
+      animalData[name].extract !== "ไม่มีคำอธิบายเพิ่มเติม" &&
+      animalData[name].extract !== "ไม่พบข้อมูล" &&
+      animalData[name].thumbnail
+    ) {
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const encoded = encodeURIComponent(name);
-      const res = await fetch(
-        `https://th.wikipedia.org/api/rest_v1/page/summary/${encoded}`
-      );
-      const data = await res.json();
+      const override = overrideData[name];
+      let wikiData: WikiAnimalData | null = null;
+
+      if (!override?.image || !override?.description) {
+        const encoded = encodeURIComponent(name);
+        const res = await fetch(
+          `https://th.wikipedia.org/api/rest_v1/page/summary/${encoded}?redirect=true`
+        );
+        const data = await res.json();
+
+        wikiData = res.ok
+          ? data
+          : { title: name, extract: "ไม่พบข้อมูล", thumbnail: null };
+      }
+
       setAnimalData((prev) => ({
         ...prev,
-        [name]: res.ok
-          ? data
-          : { title: name, extract: "ไม่พบข้อมูล", thumbnail: null },
+        [name]: {
+          title: name,
+          extract:
+            override?.description?.trim() ||
+            wikiData?.extract ||
+            "ไม่มีคำอธิบายเพิ่มเติม",
+          thumbnail: override?.image?.trim()
+            ? { source: override.image.trim() }
+            : wikiData?.thumbnail || null,
+        },
       }));
     } catch (error) {
       console.error("❌ Error fetching data for:", name, error);
@@ -160,6 +188,7 @@ const AnimalGamePage = () => {
         [name]: { title: name, extract: "เกิดข้อผิดพลาด", thumbnail: null },
       }));
     }
+
     setLoading(false);
   };
 
@@ -188,10 +217,10 @@ const AnimalGamePage = () => {
   };
 
   const getImageSrc = (name: string): string | undefined => {
-    if (name === "ค่างแว่นถิ่นใต้") return DuskyLeafMonkeyImage;
-    const animal = animalData[name];
-    const imageSrc = animal?.thumbnail?.source;
-    return imageSrc;
+    const overrideImage = overrideData[name]?.image?.trim();
+    if (overrideImage) return overrideImage;
+
+    return animalData[name]?.thumbnail?.source;
   };
 
   const closeModal = () => {
