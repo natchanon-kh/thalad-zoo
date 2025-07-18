@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import AnimalCard from "../components/AnimalCard";
 import AnimalModal from "../components/AnimalModal";
-import { Trophy, MapPin } from "lucide-react";
+import { Trophy, MapPin, Loader2 } from "lucide-react";
 
 type WikiAnimalData = {
   title: string;
@@ -20,6 +20,9 @@ const AnimalGamePage = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [viewedAnimals, setViewedAnimals] = useState<string[]>([]);
 
+  // เพิ่ม loading state สำหรับการโหลดข้อมูลเริ่มต้น
+  const [initialLoading, setInitialLoading] = useState(true);
+
   const [animalNames, setAnimalNames] = useState<string[]>([]);
   const [overrideData, setOverrideData] = useState<
     Record<string, { description?: string; image?: string }>
@@ -28,6 +31,7 @@ const AnimalGamePage = () => {
   useEffect(() => {
     const fetchAnimalListAndOverrides = async () => {
       try {
+        setInitialLoading(true); // เริ่มโหลด
         const res = await fetch(
           "https://api.sheetbest.com/sheets/22584b7d-26d9-4b0e-9660-b7aafc120428"
         );
@@ -57,6 +61,8 @@ const AnimalGamePage = () => {
         setOverrideData(overrides);
       } catch (error) {
         console.error("❌ Error fetching animal list and overrides:", error);
+      } finally {
+        setInitialLoading(false); // โหลดเสร็จแล้ว
       }
     };
 
@@ -123,6 +129,36 @@ const AnimalGamePage = () => {
   useEffect(() => {
     localStorage.setItem("gameStarted", gameStarted.toString());
   }, [gameStarted]);
+
+  // ถ้ายังโหลดข้อมูลเริ่มต้นไม่เสร็จ ให้แสดง loading screen
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-emerald-200 text-center max-w-md mx-4">
+          <div className="flex items-center justify-center mb-6">
+            <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mr-3" />
+          </div>
+          <h2 className="text-2xl font-bold text-emerald-800 mb-4">
+            กำลังโหลดสารานุกรมสัตว์...
+          </h2>
+          <p className="text-emerald-700 text-lg mb-4">
+            กำลังเตรียมข้อมูลสัตว์นานาชนิดให้คุณ
+          </p>
+          <div className="flex items-center justify-center space-x-2">
+            <div className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce"></div>
+            <div
+              className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce"
+              style={{ animationDelay: "0.1s" }}
+            ></div>
+            <div
+              className="w-3 h-3 bg-emerald-600 rounded-full animate-bounce"
+              style={{ animationDelay: "0.2s" }}
+            ></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const generateBoardGrid = () => {
     const items = ["Start", ...animalNames, "Finish"];
