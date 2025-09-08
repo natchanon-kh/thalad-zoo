@@ -8,7 +8,7 @@
   { 
     "name": "ค่างแว่นถิ่นใต้", 
     "description": "", 
-    "image": "public/assets/DuskyLeafMonkey.jpg" 
+    "image": "/assets/DuskyLeafMonkey.jpg" 
   },
   { "name": "จระเข้น้ำจืด", "description": "", "image": "" },
   { "name": "ชะนีมือขาว", "description": "", "image": "" },
