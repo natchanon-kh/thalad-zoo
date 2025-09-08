@@ -33,7 +33,7 @@ const AnimalGamePage = () => {
       try {
         setInitialLoading(true); // เริ่มโหลด
         const res = await fetch(
-          "https://api.sheetbest.com/sheets/22584b7d-26d9-4b0e-9660-b7aafc120428"
+          "animal.json" // ใช้เส้นทางสัมพัทธ์เพื่อโหลดจาก public folder
         );
         const data = await res.json();
 
